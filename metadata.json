@@ -1,0 +1,8 @@
+{
+  "name": "BedWars",
+  "description": "An action-packed 3D voxel BedWars combat game inspired by Roblox \u0026 Minecraft. Build bridges, gather generator resources, defend your bed, upgrade gear, and eliminate enemy teams!",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
