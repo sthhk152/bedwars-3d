@@ -1,5 +1,10 @@
 # 🎮 Roblox 3D 方塊床戰 (Roblox BedWars 3D)
 
+[![GitHub Pages](https://img.shields.io/badge/Demo-Live%20on%20GitHub%20Pages-brightgreen?style=for-the-badge&logo=github)](https://sthhk152.github.io/bedwars-3d/)
+[![Repo](https://img.shields.io/badge/GitHub-sthhk152%2Fbedwars--3d-blue?style=for-the-badge&logo=github)](https://github.com/sthhk152/bedwars-3d)
+
+> 🌐 **線上遊玩網址 (Live Demo)**：[https://sthhk152.github.io/bedwars-3d/](https://sthhk152.github.io/bedwars-3d/)
+
 一款基於 **Three.js** 與 **React 19** 打造的 3D 體素風格多人島嶼床戰網頁遊戲，靈感源自 Minecraft 與 Roblox 的經典床戰 (BedWars) 玩法。
 
 玩家將代表**紅隊**出征，在懸浮空中的群島地圖中與藍隊、綠隊、黃隊展開激烈的資源爭奪與攻防戰。採集發電機資源、搭建空中橋樑、在補給商店購置神裝與戰術道具、升級全隊科技，並在守護自家床位的同時拆毀敵方床位，贏得最後的勝利！
