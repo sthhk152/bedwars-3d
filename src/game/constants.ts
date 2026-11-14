@@ -1,4 +1,4 @@
-import { TeamColor, TeamInfo, ShopItem, ResourceType } from '../types/game';
+import { TeamColor, TeamInfo, ShopItem, ResourceType, MapId, MapThemeConfig } from '../types/game';
 
 // Map Dimensions & Positions
 // Base Islands arranged in a diamond/square around the center
@@ -7,71 +7,239 @@ export const DIAMOND_ISLAND_RADIUS = 26; // 45-deg diagonal
 export const ISLAND_Y = 10;
 export const VOID_KILL_Y = -12;
 
-export const INITIAL_TEAMS: Record<TeamColor, TeamInfo> = {
-  red: {
-    id: 'red',
-    name: 'Red Team',
-    nameZh: '紅隊',
-    hex: '#ef4444',
-    bedAlive: true,
-    playersAlive: 2, // 1 player + 1 friendly bot (or 1v1v1v1)
-    bedPosition: [0, ISLAND_Y + 1, BASE_ISLAND_RADIUS - 5],
-    spawnPosition: [0, ISLAND_Y + 1.5, BASE_ISLAND_RADIUS + 3],
-    shopPosition: [-4, ISLAND_Y + 1.5, BASE_ISLAND_RADIUS],
-    sharpnessLevel: 0,
-    armorProtectionLevel: 0,
-    forgeLevel: 0,
+// ==================== 5 DISTINCT BEDWARS MAP CONFIGURATIONS ====================
+
+export const MAP_CONFIGS: Record<MapId, MapThemeConfig> = {
+  classic: {
+    id: 'classic',
+    name: '浮島森林',
+    nameZh: '浮島森林',
+    nameEn: 'Sky Sanctuary',
+    subtitle: '經典原版 • 綠意盎然',
+    description: '經典的天空群島，微風吹拂綠草與白雲，石柱廢墟守護著中央翡翠祭壇。',
+    icon: '🌲',
+    badgeBg: 'bg-emerald-600/30',
+    badgeBorder: 'border-emerald-500/50',
+    badgeText: 'text-emerald-400',
+    skyColor: 0x60a5fa,
+    fogColor: 0x93c5fd,
+    fogNear: 60,
+    fogFar: 160,
+    sunColor: 0xfffaed,
+    sunIntensity: 2.2,
+    ambientColor: 0x93c5fd,
+    ambientGroundColor: 0x475569,
+    ambientIntensity: 1.2,
+    baseIslandDistance: 36,
+    baseRadius: 7,
+    diamondIslandDistance: 26,
+    centerIslandRadius: 10,
+    islandY: 10,
+    voidKillY: -12,
   },
-  blue: {
-    id: 'blue',
-    name: 'Blue Team',
-    nameZh: '藍隊',
-    hex: '#3b82f6',
-    bedAlive: true,
-    playersAlive: 2,
-    bedPosition: [0, ISLAND_Y + 1, -BASE_ISLAND_RADIUS + 5],
-    spawnPosition: [0, ISLAND_Y + 1.5, -BASE_ISLAND_RADIUS - 3],
-    shopPosition: [4, ISLAND_Y + 1.5, -BASE_ISLAND_RADIUS],
-    sharpnessLevel: 0,
-    armorProtectionLevel: 0,
-    forgeLevel: 0,
+  nether: {
+    id: 'nether',
+    name: '熔岩地獄',
+    nameZh: '熔岩地獄',
+    nameEn: 'Nether Core',
+    subtitle: '烈焰熔漿 • 熾熱黑曜石',
+    description: '深淵之上的火山浮島，黑曜石尖塔矗立於烈焰霧靄中，熾熱的熔岩鍛造著無盡爭鬥。',
+    icon: '🔥',
+    badgeBg: 'bg-rose-600/30',
+    badgeBorder: 'border-rose-500/50',
+    badgeText: 'text-rose-400',
+    skyColor: 0x200707,
+    fogColor: 0x450d0d,
+    fogNear: 45,
+    fogFar: 145,
+    sunColor: 0xff6622,
+    sunIntensity: 2.4,
+    ambientColor: 0x991b1b,
+    ambientGroundColor: 0x2d0606,
+    ambientIntensity: 1.4,
+    baseIslandDistance: 34,
+    baseRadius: 7.5,
+    diamondIslandDistance: 25,
+    centerIslandRadius: 11,
+    islandY: 10,
+    voidKillY: -12,
   },
-  green: {
-    id: 'green',
-    name: 'Green Team',
-    nameZh: '綠隊',
-    hex: '#10b981',
-    bedAlive: true,
-    playersAlive: 2,
-    bedPosition: [-BASE_ISLAND_RADIUS + 5, ISLAND_Y + 1, 0],
-    spawnPosition: [-BASE_ISLAND_RADIUS - 3, ISLAND_Y + 1.5, 0],
-    shopPosition: [-BASE_ISLAND_RADIUS, ISLAND_Y + 1.5, 4],
-    sharpnessLevel: 0,
-    armorProtectionLevel: 0,
-    forgeLevel: 0,
+  frost: {
+    id: 'frost',
+    name: '冰霜雪原',
+    nameZh: '冰霜雪原',
+    nameEn: 'Glacier Peaks',
+    subtitle: '永凍極地 • 晶瑩冰川',
+    description: '冰川與白雪覆蓋的浮空雪山，松針披霜，晶瑩剔透的冰晶方尖碑在極地寒風中閃爍。',
+    icon: '❄️',
+    badgeBg: 'bg-cyan-600/30',
+    badgeBorder: 'border-cyan-500/50',
+    badgeText: 'text-cyan-300',
+    skyColor: 0xc7d2fe,
+    fogColor: 0xdbeafe,
+    fogNear: 50,
+    fogFar: 150,
+    sunColor: 0xf0fdfa,
+    sunIntensity: 2.3,
+    ambientColor: 0xbfdbfe,
+    ambientGroundColor: 0x64748b,
+    ambientIntensity: 1.3,
+    baseIslandDistance: 38,
+    baseRadius: 8,
+    diamondIslandDistance: 27,
+    centerIslandRadius: 11,
+    islandY: 10,
+    voidKillY: -12,
   },
-  yellow: {
-    id: 'yellow',
-    name: 'Yellow Team',
-    nameZh: '黃隊',
-    hex: '#eab308',
-    bedAlive: true,
-    playersAlive: 2,
-    bedPosition: [BASE_ISLAND_RADIUS - 5, ISLAND_Y + 1, 0],
-    spawnPosition: [BASE_ISLAND_RADIUS + 3, ISLAND_Y + 1.5, 0],
-    shopPosition: [BASE_ISLAND_RADIUS, ISLAND_Y + 1.5, -4],
-    sharpnessLevel: 0,
-    armorProtectionLevel: 0,
-    forgeLevel: 0,
+  desert: {
+    id: 'desert',
+    name: '沙漠神廟',
+    nameZh: '沙漠神廟',
+    nameEn: 'Desert Citadel',
+    subtitle: '黃金綠洲 • 法老金字塔',
+    description: '浮空沙漠與古代砂岩神殿，黃昏暖陽照耀著仙人掌與棕櫚綠洲，金字塔頂守護著翡翠源泉。',
+    icon: '🏜️',
+    badgeBg: 'bg-amber-600/30',
+    badgeBorder: 'border-amber-500/50',
+    badgeText: 'text-amber-400',
+    skyColor: 0xfbbf24,
+    fogColor: 0xfef08a,
+    fogNear: 45,
+    fogFar: 145,
+    sunColor: 0xffedd5,
+    sunIntensity: 2.5,
+    ambientColor: 0xfde68a,
+    ambientGroundColor: 0x78350f,
+    ambientIntensity: 1.3,
+    baseIslandDistance: 35,
+    baseRadius: 7.5,
+    diamondIslandDistance: 26,
+    centerIslandRadius: 11,
+    islandY: 10,
+    voidKillY: -12,
+  },
+  cyber: {
+    id: 'cyber',
+    name: '賽博太空',
+    nameZh: '賽博太空',
+    nameEn: 'Cyber Nexus',
+    subtitle: '未來矩陣 • 霓虹虛空',
+    description: '懸浮於深邃外太空的未來科技矩陣平台，流淌著霓虹藍與紫紅色的量子迴路與躍遷信標。',
+    icon: '⚡',
+    badgeBg: 'bg-purple-600/30',
+    badgeBorder: 'border-purple-500/50',
+    badgeText: 'text-purple-300',
+    skyColor: 0x030712,
+    fogColor: 0x0f172a,
+    fogNear: 50,
+    fogFar: 155,
+    sunColor: 0x38bdf8,
+    sunIntensity: 2.1,
+    ambientColor: 0xa855f7,
+    ambientGroundColor: 0x0284c7,
+    ambientIntensity: 1.5,
+    baseIslandDistance: 35,
+    baseRadius: 7,
+    diamondIslandDistance: 25.5,
+    centerIslandRadius: 10.5,
+    islandY: 10,
+    voidKillY: -12,
   },
 };
 
-export const DIAMOND_ISLANDS_POSITIONS: [number, number, number][] = [
-  [DIAMOND_ISLAND_RADIUS, ISLAND_Y + 1, DIAMOND_ISLAND_RADIUS],
-  [-DIAMOND_ISLAND_RADIUS, ISLAND_Y + 1, DIAMOND_ISLAND_RADIUS],
-  [DIAMOND_ISLAND_RADIUS, ISLAND_Y + 1, -DIAMOND_ISLAND_RADIUS],
-  [-DIAMOND_ISLAND_RADIUS, ISLAND_Y + 1, -DIAMOND_ISLAND_RADIUS],
+export const MAP_LIST: MapThemeConfig[] = [
+  MAP_CONFIGS.classic,
+  MAP_CONFIGS.nether,
+  MAP_CONFIGS.frost,
+  MAP_CONFIGS.desert,
+  MAP_CONFIGS.cyber,
 ];
+
+export function getRandomMap(excludeId?: MapId): MapThemeConfig {
+  const candidates = excludeId ? MAP_LIST.filter((m) => m.id !== excludeId) : MAP_LIST;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+export function getMapById(id: MapId): MapThemeConfig {
+  return MAP_CONFIGS[id] || MAP_CONFIGS.classic;
+}
+
+export function createTeamsForMap(baseDistance: number, islandY: number = ISLAND_Y): Record<TeamColor, TeamInfo> {
+  return {
+    red: {
+      id: 'red',
+      name: 'Red Team',
+      nameZh: '紅隊',
+      hex: '#ef4444',
+      bedAlive: true,
+      playersAlive: 2, // 1 player + 1 friendly bot (or 1v1v1v1)
+      bedPosition: [0, islandY + 1, baseDistance - 5],
+      spawnPosition: [0, islandY + 1.5, baseDistance + 3],
+      shopPosition: [-4, islandY + 1.5, baseDistance],
+      sharpnessLevel: 0,
+      armorProtectionLevel: 0,
+      forgeLevel: 0,
+    },
+    blue: {
+      id: 'blue',
+      name: 'Blue Team',
+      nameZh: '藍隊',
+      hex: '#3b82f6',
+      bedAlive: true,
+      playersAlive: 2,
+      bedPosition: [0, islandY + 1, -baseDistance + 5],
+      spawnPosition: [0, islandY + 1.5, -baseDistance - 3],
+      shopPosition: [4, islandY + 1.5, -baseDistance],
+      sharpnessLevel: 0,
+      armorProtectionLevel: 0,
+      forgeLevel: 0,
+    },
+    green: {
+      id: 'green',
+      name: 'Green Team',
+      nameZh: '綠隊',
+      hex: '#10b981',
+      bedAlive: true,
+      playersAlive: 2,
+      bedPosition: [-baseDistance + 5, islandY + 1, 0],
+      spawnPosition: [-baseDistance - 3, islandY + 1.5, 0],
+      shopPosition: [-baseDistance, islandY + 1.5, 4],
+      sharpnessLevel: 0,
+      armorProtectionLevel: 0,
+      forgeLevel: 0,
+    },
+    yellow: {
+      id: 'yellow',
+      name: 'Yellow Team',
+      nameZh: '黃隊',
+      hex: '#eab308',
+      bedAlive: true,
+      playersAlive: 2,
+      bedPosition: [baseDistance - 5, islandY + 1, 0],
+      spawnPosition: [baseDistance + 3, islandY + 1.5, 0],
+      shopPosition: [baseDistance, islandY + 1.5, -4],
+      sharpnessLevel: 0,
+      armorProtectionLevel: 0,
+      forgeLevel: 0,
+    },
+  };
+}
+
+export function getDiamondIslandPositions(diamondDistance: number, islandY: number = ISLAND_Y): [number, number, number][] {
+  return [
+    [diamondDistance, islandY + 1, diamondDistance],
+    [-diamondDistance, islandY + 1, diamondDistance],
+    [diamondDistance, islandY + 1, -diamondDistance],
+    [-diamondDistance, islandY + 1, -diamondDistance],
+  ];
+}
+
+export const INITIAL_TEAMS: Record<TeamColor, TeamInfo> = createTeamsForMap(BASE_ISLAND_RADIUS, ISLAND_Y);
+
+export const DIAMOND_ISLANDS_POSITIONS: [number, number, number][] = getDiamondIslandPositions(
+  DIAMOND_ISLAND_RADIUS,
+  ISLAND_Y
+);
 
 export const CENTER_ISLAND_POSITION: [number, number, number] = [0, ISLAND_Y + 1, 0];
 

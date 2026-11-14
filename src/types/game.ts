@@ -150,3 +150,34 @@ export interface BedBreakEntry {
 }
 
 export type CameraMode = 'first' | 'third';
+
+export type MapId = 'classic' | 'nether' | 'frost' | 'desert' | 'cyber';
+
+export interface MapThemeConfig {
+  id: MapId;
+  name: string;
+  nameZh: string;
+  nameEn: string;
+  subtitle: string;
+  description: string;
+  icon: string;
+  badgeBg: string;
+  badgeBorder: string;
+  badgeText: string;
+  skyColor: number;
+  fogColor: number;
+  fogNear: number;
+  fogFar: number;
+  sunColor: number;
+  sunIntensity: number;
+  ambientColor: number;
+  ambientGroundColor: number;
+  ambientIntensity: number;
+  baseIslandDistance: number;
+  baseRadius: number;
+  diamondIslandDistance: number;
+  centerIslandRadius: number;
+  islandY: number;
+  voidKillY: number;
+}
+

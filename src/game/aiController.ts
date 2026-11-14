@@ -22,7 +22,9 @@ export class AIController {
     now: number,
     onPlaceBlock: (bot: CharacterState, pos: [number, number, number]) => void,
     onAttack: (bot: CharacterState) => void,
-    onBreakBlock: (bot: CharacterState, blockKey: string) => void
+    onBreakBlock: (bot: CharacterState, blockKey: string) => void,
+    diamondPositions: [number, number, number][] = DIAMOND_ISLANDS_POSITIONS,
+    centerPosition: [number, number, number] = CENTER_ISLAND_POSITION
   ): { moveForward: number; moveRight: number; jump: boolean; targetYaw: number } {
     if (bot.isDead) {
       return { moveForward: 0, moveRight: 0, jump: false, targetYaw: bot.yaw };
@@ -78,7 +80,9 @@ export class AIController {
         bot.aiState.targetPosition = teams[targetTeamKey].bedPosition;
       } else {
         // Roam to diamond / center island
-        const targetDest = Math.random() > 0.5 ? CENTER_ISLAND_POSITION : DIAMOND_ISLANDS_POSITIONS[Math.floor(Math.random() * 4)];
+        const diamonds = diamondPositions.length > 0 ? diamondPositions : DIAMOND_ISLANDS_POSITIONS;
+        const center = centerPosition || CENTER_ISLAND_POSITION;
+        const targetDest = Math.random() > 0.5 ? center : diamonds[Math.floor(Math.random() * diamonds.length)];
         bot.aiState.action = 'bridge';
         bot.aiState.targetPosition = [targetDest[0], targetDest[1], targetDest[2]];
       }
