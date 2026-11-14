@@ -13,6 +13,8 @@ import {
   TeamInfo,
   TNTEntity,
   VoxelBlock,
+  MapThemeConfig,
+  MapId,
 } from '../types/game';
 import {
   INITIAL_TEAMS,
@@ -20,6 +22,10 @@ import {
   ARMOR_REDUCTION,
   VOID_KILL_Y,
   BLOCK_HARDNESS,
+  getRandomMap,
+  getMapById,
+  createTeamsForMap,
+  MAP_CONFIGS,
 } from './constants';
 import { buildBedWarsMap, blockKey, MapData } from './mapBuilder';
 import { createCharacterAvatar, AvatarMeshObject } from './avatar';
@@ -56,6 +62,7 @@ export interface GameEngineCallbacks {
     respawnTimer: number;
     matchEnded: boolean;
     isVictory: boolean;
+    currentMap: MapThemeConfig;
   }) => void;
   onOpenShop: () => void;
 }
@@ -67,7 +74,10 @@ export class BedWarsEngine {
   public scene!: THREE.Scene;
   public camera!: THREE.PerspectiveCamera;
   public renderer!: THREE.WebGLRenderer;
+  private sunLight!: THREE.DirectionalLight;
+  private hemiLight!: THREE.HemisphereLight;
 
+  public currentMap: MapThemeConfig = getRandomMap();
   private mapData!: MapData;
   public blocks: Map<string, VoxelBlock> = new Map();
   private blockMeshes: Map<string, THREE.Mesh> = new Map();
@@ -123,10 +133,30 @@ export class BedWarsEngine {
     this.startLoop();
   }
 
+  public applyMapTheme(config: MapThemeConfig) {
+    if (this.scene) {
+      this.scene.background = new THREE.Color(config.skyColor);
+      if (this.scene.fog && this.scene.fog instanceof THREE.Fog) {
+        this.scene.fog.color.set(config.fogColor);
+        this.scene.fog.near = config.fogNear;
+        this.scene.fog.far = config.fogFar;
+      }
+    }
+    if (this.sunLight) {
+      this.sunLight.color.set(config.sunColor);
+      this.sunLight.intensity = config.sunIntensity;
+    }
+    if (this.hemiLight) {
+      this.hemiLight.color.set(config.ambientColor);
+      this.hemiLight.groundColor.set(config.ambientGroundColor);
+      this.hemiLight.intensity = config.ambientIntensity;
+    }
+  }
+
   private initThree() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x60a5fa); // Vibrant stylized sky blue
-    this.scene.fog = new THREE.Fog(0x93c5fd, 50, 140);
+    this.scene.background = new THREE.Color(this.currentMap.skyColor);
+    this.scene.fog = new THREE.Fog(this.currentMap.fogColor, this.currentMap.fogNear, this.currentMap.fogFar);
 
     const width = this.container.clientWidth || window.innerWidth;
     const height = this.container.clientHeight || window.innerHeight;
@@ -153,24 +183,28 @@ export class BedWarsEngine {
     pmremGenerator.dispose();
 
     // Key Light (Sun)
-    const sunLight = new THREE.DirectionalLight(0xfffaed, 2.2);
-    sunLight.position.set(45, 80, 30);
-    sunLight.castShadow = !isSoftwareGl;
-    sunLight.shadow.mapSize.width = 1024;
-    sunLight.shadow.mapSize.height = 1024;
-    sunLight.shadow.camera.near = 10;
-    sunLight.shadow.camera.far = 160;
+    this.sunLight = new THREE.DirectionalLight(this.currentMap.sunColor, this.currentMap.sunIntensity);
+    this.sunLight.position.set(45, 80, 30);
+    this.sunLight.castShadow = !isSoftwareGl;
+    this.sunLight.shadow.mapSize.width = 1024;
+    this.sunLight.shadow.mapSize.height = 1024;
+    this.sunLight.shadow.camera.near = 10;
+    this.sunLight.shadow.camera.far = 160;
     const d = 50;
-    sunLight.shadow.camera.left = -d;
-    sunLight.shadow.camera.right = d;
-    sunLight.shadow.camera.top = d;
-    sunLight.shadow.camera.bottom = -d;
-    sunLight.shadow.bias = -0.0005;
-    this.scene.add(sunLight);
+    this.sunLight.shadow.camera.left = -d;
+    this.sunLight.shadow.camera.right = d;
+    this.sunLight.shadow.camera.top = d;
+    this.sunLight.shadow.camera.bottom = -d;
+    this.sunLight.shadow.bias = -0.0005;
+    this.scene.add(this.sunLight);
 
-    // Fill Light (Cool sky bounce)
-    const hemiLight = new THREE.HemisphereLight(0x93c5fd, 0x475569, 1.2);
-    this.scene.add(hemiLight);
+    // Fill Light (Atmospheric hemisphere bounce)
+    this.hemiLight = new THREE.HemisphereLight(
+      this.currentMap.ambientColor,
+      this.currentMap.ambientGroundColor,
+      this.currentMap.ambientIntensity
+    );
+    this.scene.add(this.hemiLight);
 
     // Block Outline Helper
     const outlineGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(1.02, 1.02, 1.02));
@@ -195,8 +229,11 @@ export class BedWarsEngine {
   }
 
   private initGame() {
+    // 0. Initialize teams configuration based on randomly selected map
+    this.teams = createTeamsForMap(this.currentMap.baseIslandDistance, this.currentMap.islandY);
+
     // 1. Build map
-    this.mapData = buildBedWarsMap();
+    this.mapData = buildBedWarsMap(this.currentMap);
     this.scene.add(this.mapData.sceneGroup);
     this.blocks = new Map(this.mapData.initialBlocks);
 
@@ -1039,6 +1076,7 @@ export class BedWarsEngine {
         respawnTimer: this.player.respawnTimer,
         matchEnded: this.matchEnded,
         isVictory: this.isVictory,
+        currentMap: this.currentMap,
       });
 
       this.frameId = requestAnimationFrame(tick);
@@ -1210,7 +1248,9 @@ export class BedWarsEngine {
             this.applyDamage(b, target);
           }
         },
-        (b, bKey) => this.breakBlock(bKey, b)
+        (b, bKey) => this.breakBlock(bKey, b),
+        this.mapData.diamondPositions,
+        this.mapData.centerPosition
       );
 
       // Rotate towards target yaw
@@ -1614,26 +1654,51 @@ export class BedWarsEngine {
     }
   }
 
-  public restartGame() {
-    // Reset state
-    this.matchEnded = false;
-    this.isVictory = false;
-    this.teams = JSON.parse(JSON.stringify(INITIAL_TEAMS));
-    this.killFeed = [];
+  public restartGame(preferredMapId?: MapId) {
+    // 1. Pick a new map (randomly selected, avoiding immediate duplicate if possible)
+    const nextMap = preferredMapId
+      ? getMapById(preferredMapId)
+      : getRandomMap(this.currentMap.id);
+    this.currentMap = nextMap;
+    this.applyMapTheme(this.currentMap);
 
-    // Clear blocks created by players
+    // 2. Remove previous map scene group from scene
+    if (this.mapData && this.mapData.sceneGroup) {
+      this.scene.remove(this.mapData.sceneGroup);
+    }
+
+    // 3. Clear player-placed blocks
     this.blockMeshes.forEach((mesh) => this.scene.remove(mesh));
     this.blockMeshes.clear();
+
+    // 4. Clear entities
+    this.droppedItems.forEach(({ mesh }) => this.scene.remove(mesh));
+    this.droppedItems = [];
+
+    this.projectiles.forEach(({ mesh }) => this.scene.remove(mesh));
+    this.projectiles = [];
+
+    this.tnts.forEach(({ mesh }) => this.scene.remove(mesh));
+    this.tnts = [];
+
+    this.particles.forEach(({ mesh }) => this.scene.remove(mesh));
+    this.particles = [];
+
+    // 5. Reset match state & teams for the new map
+    this.matchEnded = false;
+    this.isVictory = false;
+    this.teams = createTeamsForMap(this.currentMap.baseIslandDistance, this.currentMap.islandY);
+    this.killFeed = [];
+    this.nextBaseGenTime = 0;
+    this.nextDiamondGenTime = 0;
+    this.nextEmeraldGenTime = 0;
+
+    // 6. Build the newly selected map
+    this.mapData = buildBedWarsMap(this.currentMap);
+    this.scene.add(this.mapData.sceneGroup);
     this.blocks = new Map(this.mapData.initialBlocks);
 
-    // Re-add bed meshes to scene if previously removed
-    this.mapData.bedMeshes.forEach((mesh) => {
-      if (!this.scene.children.includes(mesh)) {
-        this.scene.add(mesh);
-      }
-    });
-
-    // Reset player
+    // 7. Reset player to Red Team spawn on the new map
     const redSpawn = this.teams.red.spawnPosition;
     this.player.position = [redSpawn[0], redSpawn[1], redSpawn[2]];
     this.player.velocity = [0, 0, 0];
@@ -1642,13 +1707,15 @@ export class BedWarsEngine {
     this.player.inventory = this.getInitialInventory('red');
     this.player.armorTier = 0;
     this.player.swordTier = 1;
+    this.player.pickaxeTier = 1;
+    this.player.hasShears = false;
     this.player.isDead = false;
     this.player.kills = 0;
     this.player.finalKills = 0;
     this.player.bedsBroken = 0;
     this.player.blocksPlaced = 0;
 
-    // Reset bots
+    // 8. Reset bots to their respective new team spawns
     this.bots.forEach((bot) => {
       const spawn = this.teams[bot.team].spawnPosition;
       bot.position = [spawn[0], spawn[1], spawn[2]];
@@ -1657,6 +1724,12 @@ export class BedWarsEngine {
       bot.isDead = false;
       bot.currencies = { iron: 0, gold: 0, diamond: 0, emerald: 0 };
       bot.inventory = this.getInitialInventory(bot.team);
+      bot.armorTier = 0;
+      bot.swordTier = 1;
+      bot.aiState = {
+        action: 'gather',
+        nextDecisionTime: 0,
+      };
       const bMesh = this.characterMeshes.get(bot.id);
       if (bMesh) {
         bMesh.visible = true;

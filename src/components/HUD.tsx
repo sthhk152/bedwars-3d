@@ -6,6 +6,8 @@ import {
   KillFeedEntry,
   VoxelBlock,
   CameraMode,
+  MapThemeConfig,
+  MapId,
 } from '../types/game';
 import {
   Shield,
@@ -20,8 +22,12 @@ import {
   Lock,
   ChevronUp,
   ChevronDown,
+  Compass,
+  Dices,
+  X,
 } from 'lucide-react';
 import { sounds } from '../audio/soundEffects';
+import { MAP_LIST } from '../game/constants';
 
 interface HUDProps {
   player: CharacterState;
@@ -32,11 +38,13 @@ interface HUDProps {
   respawnTimer: number;
   cameraMode: CameraMode;
   mouseLocked: boolean;
+  currentMap: MapThemeConfig;
   onSelectSlot: (idx: number) => void;
   onOpenShop: () => void;
   onToggleCamera: () => void;
   onRequestPointerLock: () => void;
   onOpenHelp: () => void;
+  onSelectMap?: (mapId?: MapId) => void;
 }
 
 export const HUD: React.FC<HUDProps> = ({
@@ -48,14 +56,17 @@ export const HUD: React.FC<HUDProps> = ({
   respawnTimer,
   cameraMode,
   mouseLocked,
+  currentMap,
   onSelectSlot,
   onOpenShop,
   onToggleCamera,
   onRequestPointerLock,
   onOpenHelp,
+  onSelectMap,
 }) => {
   const [dockCollapsed, setDockCollapsed] = useState(false);
   const [isMuted, setIsMuted] = useState(sounds.getMuted());
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const handleToggleMute = () => {
     const next = sounds.toggleMute();
@@ -204,6 +215,30 @@ export const HUD: React.FC<HUDProps> = ({
               </div>
             );
           })}
+        </div>
+
+        {/* Current Map Card */}
+        <div className={`mt-2.5 p-2 rounded-xl border flex items-center justify-between ${currentMap.badgeBg} ${currentMap.badgeBorder}`}>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">{currentMap.icon}</span>
+            <div>
+              <div className="text-xs font-black text-white">{currentMap.nameZh}</div>
+              <div className="text-[10px] text-slate-300 font-medium">{currentMap.nameEn}</div>
+            </div>
+          </div>
+          {onSelectMap && (
+            <button
+              onClick={() => {
+                setIsMapModalOpen(true);
+                document.exitPointerLock?.();
+              }}
+              className="px-2 py-1 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-amber-300 text-[10px] font-bold border border-amber-500/30 flex items-center gap-1 shadow cursor-pointer transition"
+              title="查看與切換地圖"
+            >
+              <Compass className="w-3 h-3" />
+              <span>換圖</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -402,6 +437,82 @@ export const HUD: React.FC<HUDProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 8. Map Selection Modal */}
+      {isMapModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 pointer-events-auto">
+          <div className="relative w-full max-w-xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden p-6 text-left">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400 text-amber-300 flex items-center justify-center">
+                  <Compass className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">地圖選擇 (Map Selection)</h3>
+                  <p className="text-xs text-slate-400">系統新局隨機選圖，亦可點擊指定地圖立即開局</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsMapModalOpen(false)}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Random Button */}
+            <div className="my-4">
+              <button
+                onClick={() => {
+                  onSelectMap?.();
+                  setIsMapModalOpen(false);
+                }}
+                className="w-full p-3 rounded-2xl bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-purple-500/20 hover:from-amber-500/30 hover:via-rose-500/30 hover:to-purple-500/30 border border-amber-500/40 text-amber-200 font-black text-sm flex items-center justify-center gap-2 transition cursor-pointer shadow-lg"
+              >
+                <Dices className="w-5 h-5 text-amber-400" />
+                <span>🎲 隨機抽取新地圖 (Random Map)</span>
+              </button>
+            </div>
+
+            {/* List of 5 Maps */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[60vh] overflow-y-auto pr-1">
+              {MAP_LIST.map((m) => {
+                const isCurrent = m.id === currentMap.id;
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => {
+                      onSelectMap?.(m.id);
+                      setIsMapModalOpen(false);
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition flex items-start gap-3 cursor-pointer ${
+                      isCurrent
+                        ? `${m.badgeBg} ${m.badgeBorder} ring-2 ring-amber-400/50 shadow-md`
+                        : 'bg-slate-800/60 border-slate-750 hover:bg-slate-800 hover:border-slate-650'
+                    }`}
+                  >
+                    <span className="text-3xl mt-0.5">{m.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-sm text-white">{m.nameZh}</span>
+                        {isCurrent && (
+                          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/20 px-1.5 py-0.5 rounded">
+                            當前
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] font-semibold text-slate-300">{m.nameEn}</div>
+                      <div className="text-[10px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                        {m.description}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

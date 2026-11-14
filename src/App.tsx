@@ -8,8 +8,10 @@ import {
   VoxelBlock,
   CameraMode,
   ShopItem,
+  MapThemeConfig,
+  MapId,
 } from './types/game';
-import { INITIAL_TEAMS } from './game/constants';
+import { INITIAL_TEAMS, MAP_CONFIGS } from './game/constants';
 import { HUD } from './components/HUD';
 import { ShopModal } from './components/ShopModal';
 import { HelpModal } from './components/HelpModal';
@@ -29,6 +31,9 @@ export default function App() {
   const [respawnTimer, setRespawnTimer] = useState(0);
   const [matchEnded, setMatchEnded] = useState(false);
   const [isVictory, setIsVictory] = useState(false);
+  const [currentMap, setCurrentMap] = useState<MapThemeConfig>(MAP_CONFIGS.classic);
+  const [mapToast, setMapToast] = useState<MapThemeConfig | null>(null);
+  const prevMapIdRef = useRef<string | null>(null);
 
   // UI Modals
   const [isShopOpen, setIsShopOpen] = useState(false);
@@ -49,6 +54,16 @@ export default function App() {
         setRespawnTimer(state.respawnTimer);
         setMatchEnded(state.matchEnded);
         setIsVictory(state.isVictory);
+        if (state.currentMap) {
+          setCurrentMap(state.currentMap);
+          if (prevMapIdRef.current !== state.currentMap.id) {
+            prevMapIdRef.current = state.currentMap.id;
+            setMapToast(state.currentMap);
+            setTimeout(() => {
+              setMapToast((curr) => (curr?.id === state.currentMap.id ? null : curr));
+            }, 4500);
+          }
+        }
       },
       onOpenShop: () => {
         setIsShopOpen(true);
@@ -103,9 +118,9 @@ export default function App() {
     return engineRef.current.buyUpgrade(upgradeId);
   };
 
-  const handleRestart = () => {
+  const handleRestart = (preferredMapId?: MapId) => {
     if (engineRef.current) {
-      engineRef.current.restartGame();
+      engineRef.current.restartGame(preferredMapId);
       setMatchEnded(false);
       setIsVictory(false);
     }
@@ -166,6 +181,7 @@ export default function App() {
           respawnTimer={respawnTimer}
           cameraMode={cameraMode}
           mouseLocked={mouseLocked}
+          currentMap={currentMap}
           onSelectSlot={handleSelectSlot}
           onOpenShop={() => {
             setIsShopOpen(true);
@@ -177,7 +193,31 @@ export default function App() {
             setIsHelpOpen(true);
             document.exitPointerLock?.();
           }}
+          onSelectMap={handleRestart}
         />
+      )}
+
+      {/* 2.5 Animated Map Announcement Toast */}
+      {mapToast && (
+        <div className="pointer-events-none fixed top-16 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center animate-bounce-in transition-all duration-300">
+          <div
+            className={`px-6 py-2.5 rounded-2xl backdrop-blur-md shadow-2xl border flex items-center gap-3.5 ${mapToast.badgeBg} ${mapToast.badgeBorder}`}
+          >
+            <span className="text-3xl">{mapToast.icon}</span>
+            <div className="text-left">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-300 bg-amber-500/20 px-1.5 py-0.5 rounded">
+                  本局隨機地圖
+                </span>
+                <span className="text-xs text-slate-300 font-semibold">{mapToast.nameEn}</span>
+              </div>
+              <div className="text-lg font-black text-white tracking-wide">{mapToast.nameZh}</div>
+            </div>
+          </div>
+          <div className="mt-1.5 text-xs text-slate-200/90 bg-slate-950/80 px-3 py-1 rounded-full border border-slate-700/80 shadow">
+            {mapToast.subtitle} • {mapToast.description}
+          </div>
+        </div>
       )}
 
       {/* 3. Mobile Touch Controls (shown on touch devices) */}
@@ -211,6 +251,7 @@ export default function App() {
         <GameOverModal
           isVictory={isVictory}
           player={playerState}
+          currentMap={currentMap}
           onRestart={handleRestart}
         />
       )}

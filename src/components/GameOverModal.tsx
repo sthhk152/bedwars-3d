@@ -1,17 +1,19 @@
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { CharacterState } from '../types/game';
-import { Trophy, Skull, RefreshCw, Award, Hammer, Shield } from 'lucide-react';
+import { CharacterState, MapThemeConfig } from '../types/game';
+import { Trophy, Skull, RefreshCw, Sparkles, MapPin } from 'lucide-react';
 
 interface GameOverModalProps {
   isVictory: boolean;
   player: CharacterState;
+  currentMap: MapThemeConfig;
   onRestart: () => void;
 }
 
 export const GameOverModal: React.FC<GameOverModalProps> = ({
   isVictory,
   player,
+  currentMap,
   onRestart,
 }) => {
   useEffect(() => {
@@ -61,8 +63,25 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
           {isVictory ? '恭喜！紅隊征服了所有浮島，贏得床戰冠軍！' : '你的床位被破壞且隊伍全數陣亡！'}
         </p>
 
+        {/* Completed Map Badge */}
+        <div className={`w-full mt-4 p-3 rounded-2xl border flex items-center justify-between ${currentMap.badgeBg} ${currentMap.badgeBorder}`}>
+          <div className="flex items-center gap-2.5 text-left">
+            <span className="text-2xl">{currentMap.icon}</span>
+            <div>
+              <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                <span>本局地圖：{currentMap.nameZh}</span>
+                <span className="text-[10px] text-slate-300">({currentMap.nameEn})</span>
+              </div>
+              <div className="text-[11px] text-slate-300/90">{currentMap.subtitle}</div>
+            </div>
+          </div>
+          <span className="text-[10px] bg-slate-950/70 text-amber-300 font-semibold px-2 py-0.5 rounded-full border border-amber-500/30">
+            5 地圖隨機輪換
+          </span>
+        </div>
+
         {/* Match Statistics Card */}
-        <div className="w-full my-6 p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-left space-y-3">
+        <div className="w-full my-5 p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-left space-y-3">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
             本場對局戰績 (Match Stats)
           </div>
@@ -90,13 +109,13 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
           </div>
         </div>
 
-        {/* Restart Button */}
+        {/* Restart Button with Random Map indication */}
         <button
           onClick={onRestart}
           className="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xl transition transform hover:scale-[1.02] cursor-pointer"
         >
           <RefreshCw className="w-4 h-4" />
-          <span>再戰一局 (Play Again)</span>
+          <span>再戰一局 • 隨機抽取新地圖 (Play Again)</span>
         </button>
       </div>
     </div>
